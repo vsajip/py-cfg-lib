@@ -1,0 +1,2 @@
+include README.rst LICENSE datafmt.py test_config.py
+recursive-include test *

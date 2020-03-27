@@ -1,0 +1,251 @@
+-- C01 -------------------------------------------------------------------
+# Basic mapping with a single key-value pair and comment
+message: 'Hello, world!'
+-- C02 -------------------------------------------------------------------
+# Mapping with multiple key-value pairs
+message: 'Hello, world!'
+ident: 42
+-- C03 -------------------------------------------------------------------
+# Mapping with interspersed comments
+message: 'Hello, world!'
+# A separating comment
+ident: 43
+-- C04 -------------------------------------------------------------------
+# With included trailing commas for both list and mapping
+numbers: [0, 0x012, 013, 1014, ],
+-- C05 -------------------------------------------------------------------
+complex: [0j, 1j,
+          .4j, 0.7j]
+-- C06 -------------------------------------------------------------------
+nested: {a: b, c : d, 'e f': 'g'}
+-- C07 -------------------------------------------------------------------
+foo: [1, 2, 3]
+
+
+bar: [
+    4 + x   # random comment
+
+
+    5,      # another one
+
+    6       # and one more
+]
+baz: {
+    foo: [1, 2, 3]
+
+    bar: 'baz' + 3
+}
+-- C08 -------------------------------------------------------------------
+total_period : 100
+header_time: 0.3 * total_period
+steady_time: 0.5 * total_period
+trailer_time: 0.2 * total_period
+base_prefix: '/my/app/'
+log_file: base_prefix + 'test.log'
+-- C09 -------------------------------------------------------------------
+# The message to print (this is a comment)
+message: 'Hello, world!'
+stream: `sys.stderr`
+-- C10 -------------------------------------------------------------------
+messages:
+[
+  { stream : `sys.stderr`, message: 'Welcome' },
+  { stream : `sys.stdout`, message: 'Welkom' },
+  { stream : `sys.stderr`, message: 'Bienvenue' },
+]
+-- C11 -------------------------------------------------------------------
+messages:
+[
+  {
+    stream : `sys.stderr`
+    message: Welcome
+    name: 'Harry'
+  }
+  {
+    stream : `sys.stdout`
+    message: Welkom
+    name: 'Ruud'
+  }
+  {
+    stream  : `sys.stderr`
+    message : Bienvenue
+    name    : Yves
+  }
+]
+-- C12 -------------------------------------------------------------------
+messages:
+[
+  {
+    stream : `sys.stderr`
+    message: 'Welcome'
+    name: 'Harry'
+  }
+  {
+    stream : `sys.stdout`
+    message: 'Welkom'
+    name: 'Ruud'
+  }
+  {
+    stream : ${messages[0].stream}
+    message: 'Bienvenue'
+    name: Yves
+  }
+]
+-- C13 -------------------------------------------------------------------
+logging: @"logging.cfg"
+test: ${logging.handler.email.from}
+-- C14 -------------------------------------------------------------------
+# root logger configuration
+root:
+{
+  level     : DEBUG
+  handlers  : [${handlers.console}, ${handlers.file}, ${handlers.email}]
+}
+# logging handlers
+handlers:
+{
+  console:  [
+              # the class to instantiate
+              StreamHandler,
+              # how to configure the instance
+              {
+                level : WARNING             # the logger level
+                stream  : `sys.stderr` }    # the stream to use
+            ]
+  file:     [ FileHandler, { filename: ${app.base} + ${app.name} + '.log', mode : 'a' } ]
+  socket:   [ `handlers.SocketHandler`, {
+                  host: localhost,
+                  # use this port for now
+                  port: `handlers.DEFAULT_TCP_LOGGING_PORT`} ]
+  nt_eventlog: [`handlers.NTEventLogHandler`, { appname: ${app.name}, logtype : Application } ]
+  email:    [ `handlers.SMTPHandler`,
+              { level: CRITICAL,
+                host: localhost,
+                port: 25,
+                from: ${app.name} + ${app.mail_domain},
+                to: [${app.support_team} + ${app.mail_domain}, 'QA' + ${app.mail_domain}, 'product_manager' + ${app.mail_domain}],
+                subject: 'Take cover' } ] # random comment
+}
+# the loggers which are configured
+loggers:
+{
+  "input"     : { handlers: [${handlers.socket}] }
+  "input.xls" : { handlers: [${handlers.nt_eventlog}] }
+}
+-- C15 -------------------------------------------------------------------
+a: ${foo.bar}.baz
+b: `bish.bash`.bosh
+-- C16 -------------------------------------------------------------------
+test : False
+another_test: True
+-- C17 -------------------------------------------------------------------
+test : None
+-- C18 -------------------------------------------------------------------
+root: 1
+stream: 1.7
+neg: -1
+negfloat: -2.0
+posexponent: 2.0999999e-08
+negexponent: -2.0999999e-08
+exponent: 2.0999999e08
+-- C19 -------------------------------------------------------------------
+mixed: [ "VALIGN", [ 0, 0 ], [ -1, -1 ], "TOP" ]
+simple: [1, 2]
+nested: [1, [2, 3], [4, [5, 6]]]
+-- C20 -------------------------------------------------------------------
+value1 : 10
+value2 : 5
+value3 : 'abc'
+value4 : "'ghi'" '"jkl"'
+value5 : 0
+value6 : { 'a' : ${value1}, 'b': ${value2} }
+derived1 : ${value1} + ${value2}
+derived2 : ${value1} - ${value2}
+derived3 : ${value1} * ${value2}
+derived4 : (${value1} / ${value2}) + ${value5}
+derived5 : ${value1} % ${value2}
+derived6 : ${value3} + ${value4}
+derived7 : ${value3} + 'def' + ${value4}
+derived8 : ${value3} - ${value4}
+derived9 : ${value1} // ${value5}
+derived10 : ${value1} % ${value5}
+derived11 : ${value17}                  # non-existent
+derived12 : ${value6}.a + ${value6}.b
+-- C21 -------------------------------------------------------------------
+stderr : `sys.stderr`
+stdout : `sys.stdout`
+stdin : `sys.stdin`
+debug : `debug`
+DEBUG : `DEBUG`
+derived: ${DEBUG} * 10
+-- C22 -------------------------------------------------------------------
+messages:
+[
+  {
+    stream : `sys.stderr`
+    message: 'Welcome'
+    name: 'Harry'
+  }
+  {
+    stream : `sys.stdout`
+    message: 'Welkom'
+    name: 'Ruud'
+  }
+  # override an existing value with specific elements
+  ${messages[0]} + {message: Bienvenue, name: Yves}
+]
+-- C23 -------------------------------------------------------------------
+foo:
+[
+    bar
+    baz
+    bozz
+]
+-- C24 -------------------------------------------------------------------
+foo: [
+    'bar',
+    a + b - c + d
+]
+-- C25 -------------------------------------------------------------------
+unicode = 'Grüß Gott'
+more_unicode: 'Øresund'
+-- C26 -------------------------------------------------------------------
+    foo: [
+        'bar',
+        a + b - c + d
+    ]
+-- C27 -------------------------------------------------------------------
+    foo: (a & b) ^ (c | d)
+-- C28 -------------------------------------------------------------------
+foo: '''
+a multi-line string with internal
+'' and "" sequences
+'''
+bar: """
+another multi-line string with internal
+'' and "" sequences
+"""
+-- C29 -------------------------------------------------------------------
+empty_dict: {
+}
+-- C30 -------------------------------------------------------------------
+empty_list: [
+]
+-- D01 -------------------------------------------------------------------
+# a plain scalar value is not legal
+123
+-- D02 -------------------------------------------------------------------
+# nor is a list (unless using the 'container' rule)
+[ 123, 'abc' ]
+-- D03 -------------------------------------------------------------------
+# nor is a mapping (unless using the 'container' rule)
+{ a : 7, b : 1.3, c : 'test' }
+-- D04 -------------------------------------------------------------------
+-- D05 -------------------------------------------------------------------
+-- D06 -------------------------------------------------------------------
+-- D07 -------------------------------------------------------------------
+-- D08 -------------------------------------------------------------------
+-- D09 -------------------------------------------------------------------
+Gubbins
+at the
+end
