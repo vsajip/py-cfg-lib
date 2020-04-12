@@ -321,7 +321,7 @@ class FragmentTestCase(BaseTestCase):
         })
         with self.assertRaises(ParserError) as ec:
             parser.parse('foo[start::step:]', 'expr')
-        self.assertIn('Expected ], got : at (1, 16)', str(ec.exception))
+        self.assertIn("Expected ']', got ':' at (1, 16)", str(ec.exception))
 
     def test_errors(self):
         parser = self.parser
@@ -1341,6 +1341,7 @@ class ConfigTestCase(BaseTestCase):
             'root', 'version'])
         self.assertEqual(log_conf['version'], 1)
         self.assertRaises(ConfigError, log_conf.get, 'handlers.file/filename')
+        self.assertRaises(ConfigError, log_conf.get, '"handlers.file/filename')
         self.assertEqual(log_conf.get('foo', 'bar'), 'bar')
         self.assertEqual(log_conf.get('foo.bar', 'baz'), 'baz')
         self.assertEqual(log_conf.get('handlers.debug.levl', 'bozz'), 'bozz')
@@ -1781,6 +1782,13 @@ class ConfigTestCase(BaseTestCase):
     def test_bad_rule(self):
         parser = self.parser
         self.assertRaises(ValueError, parser.parse, 'foo', rule='bar')
+
+    def test_absolute_include_path(self):
+        p = os.path.abspath(os.path.join('test', 'derived', 'test.cfg'))
+        # replace backslashes for Windows - avoids having to escape them
+        s = 'test: @"%s"' % p.replace('\\', '/')
+        cfg = Config(io.StringIO(s))
+        self.assertEqual(2, cfg["test.computed6"])
 
 
 #

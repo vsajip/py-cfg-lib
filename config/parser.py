@@ -7,6 +7,7 @@ from collections import OrderedDict
 import functools
 import io
 import logging
+import sys
 
 from .tokens import *
 
@@ -24,6 +25,7 @@ class ODict(OrderedDict):
     This class preserves insertion order for display purposes but is
     otherwise just a dict.
     """
+
     def __repr__(self):  # pragma: no cover
         result = []
         for k, v in self.items():
@@ -72,8 +74,29 @@ def make_binary_expr(op, lhs, rhs):
 
 
 def invalid_index(n, pos):
-    raise ParserError('Invalid index at %s: expected 1 expression, '
-                      'found %d' % (pos, n))
+    raise ParserError(
+        'Invalid index at %s: expected 1 expression, ' 'found %d' % (pos, n)
+    )
+
+
+TOKEN_REPRS = {
+    WORD: 'identifier',
+    NEWLINE: 'newline',
+    INTEGER: 'integer',
+    FLOAT: 'floating-point value',
+    COMPLEX: 'complex value',
+    STRING: 'string',
+    BACKTICK: 'backtick-string',
+    EOF: 'EOF',
+}
+
+
+def token_repr(kind):
+    if kind in TOKEN_REPRS:
+        return TOKEN_REPRS[kind]
+    if sys.version_info[0] == 2:
+        return "'%s'" % kind
+    return '%r' % kind
 
 
 VALUE_STARTERS = {WORD, INTEGER, FLOAT, COMPLEX, STRING, BACKTICK, TRUE, FALSE, NONE}
@@ -109,7 +132,9 @@ class Parser(object):
 
     def expect(self, tt):
         if self.token.kind != tt:
-            pe = ParserError('Expected %s, got %s at %s' % (tt, self.token.kind, self.token.start))
+            pe = ParserError(
+                'Expected %s, got %s at %s' % (token_repr(tt), token_repr(self.token.kind), self.token.start)
+            )
             pe.location = self.token.start
             raise pe
         result = self.token
@@ -139,13 +164,18 @@ class Parser(object):
             set_positions(result, start, end)
             return result
         if tt not in (WORD, STRING):
-            pe = ParserError('Unexpected \'%s\' at %s' % (self.token.kind, self.token.start))
+            pe = ParserError(
+                'Unexpected %s at %s' % (token_repr(self.token.kind), self.token.start)
+            )
             pe.location = self.token.start
             raise pe
         while tt in (WORD, STRING):
             key = self.object_key()
             if self.token.kind not in (COLON, ASSIGN):
-                pe = ParserError('Unexpected \'%s\' at %s' % (self.token.kind, self.token.start))
+                pe = ParserError(
+                    'Unexpected %s at %s'
+                    % (token_repr(self.token.kind), self.token.start)
+                )
                 pe.location = self.token.start
                 raise pe
             self.advance()
@@ -156,6 +186,13 @@ class Parser(object):
             if tt in (NEWLINE, COMMA):
                 self.advance()
                 tt = self.consume_newlines()
+            elif tt not in (RCURLY, EOF):
+                pe = ParserError(
+                    'Unexpected %s at %s'
+                    % (token_repr(self.token.kind), self.token.start)
+                )
+                pe.location = self.token.start
+                raise pe
         return result
 
     def strings(self):
@@ -184,9 +221,26 @@ class Parser(object):
         start = self.token.start
         end = self.token.end
         tt = self.consume_newlines()
-        while tt in (LCURLY, LBRACK, LPAREN, AT, DOLLAR, BACKTICK, PLUS, MINUS,
-                     BITNOT, INTEGER, FLOAT, COMPLEX, TRUE, FALSE,
-                     NONE, NOT, STRING, WORD):
+        while tt in (
+            LCURLY,
+            LBRACK,
+            LPAREN,
+            AT,
+            DOLLAR,
+            BACKTICK,
+            PLUS,
+            MINUS,
+            BITNOT,
+            INTEGER,
+            FLOAT,
+            COMPLEX,
+            TRUE,
+            FALSE,
+            NONE,
+            NOT,
+            STRING,
+            WORD,
+        ):
             value = self.expr()
             end = self.token.end
             result.append(value)
@@ -207,7 +261,10 @@ class Parser(object):
     def value(self):
         tt = self.token.kind
         if tt not in VALUE_STARTERS:
-            pe = ParserError('Unexpected \'%s\' when looking for value: %s' % (tt, self.token.start))
+            pe = ParserError(
+                'Unexpected %s when looking for value: %s'
+                % (token_repr(tt), self.token.start)
+            )
             pe.location = self.token.start
             raise pe
         if tt == STRING:
@@ -234,7 +291,9 @@ class Parser(object):
         elif k in (WORD, STRING, EOF):
             result = self.mapping_body()
         else:
-            pe = ParserError('Unexpected \'%s\' at %s' % (self.token.kind, self.token.start))
+            pe = ParserError(
+                'Unexpected %s at %s' % (token_repr(self.token.kind), self.token.start)
+            )
             pe.location = self.token.start
             raise pe
         self.consume_newlines()
@@ -260,10 +319,9 @@ class Parser(object):
             self.expect(RPAREN)
         else:
             # import pdb; pdb.set_trace()
-            s = self.token.text
-            if self.token.kind == EOF:
-                s = 'EOF'
-            pe = ParserError('Unexpected \'%s\' at %s' % (s, self.token.start))
+            pe = ParserError(
+                'Unexpected %s at %s' % (token_repr(self.token.kind), self.token.start)
+            )
             pe.location = self.token.start
             raise pe
         return result

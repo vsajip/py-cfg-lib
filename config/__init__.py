@@ -14,8 +14,16 @@ import re
 import sys
 
 from .tokens import Token, SCALAR_TOKENS, WORD, BACKTICK, DOLLAR
-from .parser import (Parser, MappingBody, ListBody, ASTNode, ODict, open_file,
-                     RecognizerError, ParserError)
+from .parser import (
+    Parser,
+    MappingBody,
+    ListBody,
+    ASTNode,
+    ODict,
+    open_file,
+    RecognizerError,
+    ParserError,
+)
 
 __all__ = ['Config', 'ConfigFormatError', 'ConfigError']
 
@@ -33,12 +41,14 @@ if sys.version_info[0] < 3:
 
         def dst(self, dt):  # pragma: no cover
             return datetime.timedelta(0)
+
+
 else:
     from datetime import timezone
 
     basestring = str
 
-__version__ = '0.5.0'
+__version__ = '0.5.0.post0'
 
 
 class ConfigFormatError(ParserError):
@@ -48,9 +58,11 @@ class ConfigFormatError(ParserError):
 class ConfigError(ValueError):
     pass
 
+
 # This is a marker used in get(key, defaultValue) to catch rather than KeyError
 class KeyNotFoundError(ConfigError):
     pass
+
 
 def _parse_path(path):
     p = Parser(io.StringIO(path))
@@ -136,17 +148,19 @@ _SCALAR_TYPES = _SYSTEM_TYPES + (Token,)
 
 def _merge_dicts(target, source):
     for k, v in source.items():
-        if (k in target and isinstance(target[k], dict) and
-                isinstance(v, Mapping)):
+        if k in target and isinstance(target[k], dict) and isinstance(v, Mapping):
             _merge_dicts(target[k], v)
         else:
             target[k] = source[k]
 
+
 # use negative lookahead to disallow anything starting with a digit.
 _IDENTIFIER_PATTERN = re.compile(r'^(?!\d)(\w+)$', re.U)
 
+
 def is_identifier(s):
     return bool(_IDENTIFIER_PATTERN.match(s))
+
 
 class DictWrapper(object):
     def __init__(self, config, data):
@@ -213,6 +227,7 @@ class DictWrapper(object):
             s = s[:57] + '...'
         return '%s(%s)' % (self.__class__.__name__, s)
 
+
 class ListWrapper(object):
     def __init__(self, config, data):
         self.config = config
@@ -250,12 +265,14 @@ class ListWrapper(object):
         return '%s(%s)' % (self.__class__.__name__, s)
 
 
-_ISO_DATETIME_PATTERN = re.compile(r'\d{4}-\d{2}-\d{2}(([ T])'
-                                   r'((?P<time>\d{2}:\d{2}:\d{2})'
-                                   r'(?P<ms>\.\d{1,6})?'
-                                   r'((?P<sign>[+-])(?P<oh>\d{2}):'
-                                   r'(?P<om>\d{2})(:(?P<os>\d{2})'
-                                   r'(?P<oms>\.\d{1,6})?)?)?))?$')
+_ISO_DATETIME_PATTERN = re.compile(
+    r'\d{4}-\d{2}-\d{2}(([ T])'
+    r'((?P<time>\d{2}:\d{2}:\d{2})'
+    r'(?P<ms>\.\d{1,6})?'
+    r'((?P<sign>[+-])(?P<oh>\d{2}):'
+    r'(?P<om>\d{2})(:(?P<os>\d{2})'
+    r'(?P<oms>\.\d{1,6})?)?)?))?$'
+)
 _DOTTED_WORDS = r'[A-Za-z_]\w*(\.[A-Za-z_]\w*)*'
 _COLON_OBJECT_PATTERN = re.compile('%s:(%s)?$' % (_DOTTED_WORDS, _DOTTED_WORDS))
 _DOTTED_OBJECT_PATTERN = re.compile('%s$' % _DOTTED_WORDS)
@@ -270,6 +287,7 @@ class Evaluator(object):
     of references already seen in an evaluation, to catch circular references.
     That needs to be done per-evaluation.
     """
+
     op_map = {
         '@': 'eval_at',
         '$': 'eval_reference',
@@ -323,31 +341,36 @@ class Evaluator(object):
         fn = config._evaluated(operand)
         if not isinstance(fn, basestring):
             raise ConfigError('@ operand must be a string, but is %s' % fn)
-        p = os.path.join(config.rootdir, fn)
         found = False
-        if os.path.isfile(p):
-            found = True
+        if os.path.isabs(fn):
+            if os.path.isfile(fn):
+                p = fn
+                found = True
         else:
-            for ip in config.include_path:
-                p = os.path.join(ip, fn)
-                if os.path.isfile(p):
-                    found = True
-                    break
+            p = os.path.join(config.rootdir, fn)
+            if os.path.isfile(p):
+                found = True
+            else:
+                for ip in config.include_path:
+                    p = os.path.join(ip, fn)
+                    if os.path.isfile(p):
+                        found = True
+                        break
         if not found:
             raise ConfigError('Unable to locate %s' % fn)
         with open_file(p) as f:
             p = Parser(f)
             result = p.container()
             if isinstance(result, MappingBody):
-                cfg = Config(None, context=config.context,
-                             cache=self.config._cache is not None)
+                cfg = Config(
+                    None, context=config.context, cache=self.config._cache is not None
+                )
                 cfg._parent = config
                 cfg._data = cfg._wrap_mapping(result)
                 result = cfg
         return result
 
     def _get_from_path(self, path):
-
         def is_ref(n):
             return isinstance(n, ASTNode) and n['op'] == DOLLAR
 
@@ -375,8 +398,7 @@ class Evaluator(object):
                 need_string = not isinstance(result, ListWrapper)
             sliced = False
             if isinstance(operand, tuple):
-                operand = slice(*[current_evaluator.evaluate(item) for
-                                  item in operand])
+                operand = slice(*[current_evaluator.evaluate(item) for item in operand])
                 sliced = True
                 if not isinstance(result, ListWrapper):
                     raise ConfigError('slices can only operate on lists')
@@ -386,7 +408,9 @@ class Evaluator(object):
                 if not isinstance(operand, basestring):
                     raise ConfigError('string required, but found %r' % operand)
             elif not isinstance(operand, (int, slice)):
-                raise ConfigError('integer or slice required, but found \'%s\'' % operand)
+                raise ConfigError(
+                    'integer or slice required, but found \'%s\'' % operand
+                )
             try:
                 v = container[operand]  # always use indexing, never attr
             except IndexError:
@@ -398,7 +422,9 @@ class Evaluator(object):
                 if vid in current_evaluator.refs_seen:
                     parts = []
                     for v in current_evaluator.refs_seen.values():
-                        parts.append('%s %s' % (_to_source(v), v['operand']['lhs'].start))
+                        parts.append(
+                            '%s %s' % (_to_source(v), v['operand']['lhs'].start)
+                        )
                     s = ', '.join(sorted(parts))
                     raise ConfigError('Circular reference: %s' % s)
                 current_evaluator.refs_seen[vid] = v
@@ -594,8 +620,9 @@ def _default_convert_string(s):
                         osec = int(gd['os'], 10)
                     if gd['oms']:
                         oms = int(float(gd['oms']) * 1e6)
-                td = datetime.timedelta(hours=oh, minutes=om, seconds=osec,
-                                        microseconds=oms)
+                td = datetime.timedelta(
+                    hours=oh, minutes=om, seconds=osec, microseconds=oms
+                )
                 if gd['sign'] == '-':
                     td = -td
                 tzinfo = timezone(td)
@@ -620,7 +647,6 @@ def _default_convert_string(s):
 
 
 class Config(object):
-
     def __init__(self, stream_or_path, **kwargs):
         self.context = kwargs.get('context', {})
         self.include_path = kwargs.get('include_path', [])
@@ -648,8 +674,11 @@ class Config(object):
             key = k.value
             if self.no_duplicates:
                 if key in seen:
-                    msg = ('Duplicate key %s seen at %s '
-                           '(previously at %s)' % (key, k.start, seen[key]))
+                    msg = 'Duplicate key %s seen at %s ' '(previously at %s)' % (
+                        key,
+                        k.start,
+                        seen[key],
+                    )
                     raise ConfigError(msg)
                 seen[key] = k.start
             data[key] = v
@@ -697,7 +726,7 @@ class Config(object):
         if cached and key in self._cache:
             result = self._cache[key]
         else:
-            result =  self._data[key]
+            result = self._data[key]
             if cached:
                 self._cache[key] = result
         return _unwrap(result)

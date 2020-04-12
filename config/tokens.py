@@ -637,6 +637,7 @@ if sys.version_info[0] < 3:
         if i > 0 and oc < lo:
             lo, hi = PRINTABLE_RANGES[i - 1]
         return lo <= oc <= hi
+
     text_type = unicode
 else:
     unichr = chr
@@ -703,9 +704,12 @@ PUNCT = ':-+*/%,.{}[]()@$<>!~&|^'
 PYKEYWORDS = {PYTRUE: TRUE, PYFALSE: FALSE, PYNONE: NONE}
 
 KEYWORD_VALUES = {
-    TRUE: True, PYTRUE: True,
-    FALSE: False, PYFALSE: False,
-    NONE: None, PYNONE: None,
+    TRUE: True,
+    PYTRUE: True,
+    FALSE: False,
+    PYFALSE: False,
+    NONE: None,
+    PYNONE: None,
 }
 
 SCALAR_TOKENS = {STRING, INTEGER, FLOAT, COMPLEX, FALSE, TRUE, NONE}
@@ -748,7 +752,7 @@ ESCAPES = {
     '\\': '\\',
     '\"': '\"',
     '\'': '\'',
-    '/': '/',    # http://api.nobelprize.org/v1/prize.json escapes these
+    '/': '/',  # http://api.nobelprize.org/v1/prize.json escapes these
 }
 
 
@@ -856,8 +860,9 @@ class Tokenizer(object):
                     token += c
                     last_was_digit = True
                     endline, endcol = self.charline, self.charcol
-                elif (radix == 16) and (('0' <= c <= '9') or ('a' <= c <= 'f') or
-                                        ('A' <= c <= 'F')):
+                elif (radix == 16) and (
+                    ('0' <= c <= '9') or ('a' <= c <= 'f') or ('A' <= c <= 'F')
+                ):
                     token += c
                     last_was_digit = True
                     endline, endcol = self.charline, self.charcol
@@ -878,12 +883,21 @@ class Tokenizer(object):
                     else:
                         token += c
                         endline, endcol = self.charline, self.charcol
-                elif (radix == 0) and (c == '-') and token.find('-', 1) < 0 and in_exponent:
+                elif (
+                    (radix == 0)
+                    and (c == '-')
+                    and token.find('-', 1) < 0
+                    and in_exponent
+                ):
                     token += c
                     endline, endcol = self.charline, self.charcol
-                elif ((radix == 0) and (c in 'eE') and
-                      (token.find('e') < 0) and (token.find('E') < 0) and
-                      (token[-1] != '_')):
+                elif (
+                    (radix == 0)
+                    and (c in 'eE')
+                    and (token.find('e') < 0)
+                    and (token.find('E') < 0)
+                    and (token[-1] != '_')
+                ):
                     token += c
                     endline, endcol = self.charline, self.charcol
                     in_exponent = True
@@ -951,10 +965,10 @@ class Tokenizer(object):
                         if (i + slen) > n:
                             failed = True
                             break
-                        p = s[i + 2:i + slen]
+                        p = s[i + 2 : i + slen]
                         try:
                             d = int(p, 16)
-                            if (0xd800 <= d <= 0xdfff) or d >= 0x110000:
+                            if (0xD800 <= d <= 0xDFFF) or d >= 0x110000:
                                 failed = True
                                 break
                             result.append(unichr(d))
@@ -968,7 +982,9 @@ class Tokenizer(object):
                     s = s[i:]
                     i = s.find('\\')
                 if failed:
-                    e = TokenizerError('Invalid escape sequence at index %d: %s' % (i, s))
+                    e = TokenizerError(
+                        'Invalid escape sequence at index %d: %s' % (i, s)
+                    )
                     e.location = (startline, startcol)
                     raise e
                 result.append(s)
@@ -1021,7 +1037,9 @@ class Tokenizer(object):
                     if not c:
                         break
                     if not is_printable(c):
-                        e = TokenizerError('Invalid char %c in `-string: \'%s\'' % (c, token))
+                        e = TokenizerError(
+                            'Invalid char %c in `-string: \'%s\'' % (c, token)
+                        )
                         e.location = (self.charline, self.charcol)
                         raise e
                     token += c
@@ -1064,7 +1082,11 @@ class Tokenizer(object):
                     token += c
                     endline, endcol = self.charline, self.charcol
                     if (c == quote) and not escaped:
-                        if not multiline or (len(token) >= 6 and token.endswith(token[:3]) and token[-4] != '\\'):
+                        if not multiline or (
+                            len(token) >= 6
+                            and token.endswith(token[:3])
+                            and token[-4] != '\\'
+                        ):
                             break
                     if c == '\\':
                         nc = get_char()
