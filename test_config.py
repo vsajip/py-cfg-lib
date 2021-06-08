@@ -1606,6 +1606,8 @@ class ConfigTestCase(BaseTestCase):
         self.assertIs(config['special_value_1'], sys.stderr)
         if os.name != 'nt':
             self.assertEqual(config['special_value_2'], os.path.expanduser('~'))
+        else:
+            self.assertEqual(config['special_value_2a'], os.path.expanduser('~'))
         tzinfo = timezone(datetime.timedelta(hours=5, minutes=30))
         dtv = datetime.datetime(2019,3,28,23,27,4, 314159, tzinfo=tzinfo)
         self.assertEqual(config['special_value_3'], dtv)
