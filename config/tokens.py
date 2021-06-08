@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# Copyright 2018-2020 by Vinay Sajip. All Rights Reserved.
+# Copyright 2018-2021 by Vinay Sajip. All Rights Reserved.
 #
 from __future__ import unicode_literals
 
@@ -780,7 +780,7 @@ class Tokenizer(object):
         return s[p:]
 
     def push_back(self, c):
-        if c and ((c == '\n') or (c not in self.whitespace)):
+        if c:
             self.pbchars.append((c, self.charline, self.charcol))
 
     def get_char(self):

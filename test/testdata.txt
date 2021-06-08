@@ -231,6 +231,17 @@ empty_dict: {
 -- C30 -------------------------------------------------------------------
 empty_list: [
 ]
+-- C31 -------------------------------------------------------------------
+stuff_with_spaces: {
+ kind: 'field',
+ type: 'input',
+ name: 'foo2',
+ label: 'A date field',
+ label_i18n: ' ',
+ placeholder: 'Enter a date',
+ ph_i18n: ' ',
+ classes: 'date'
+}
 -- D01 -------------------------------------------------------------------
 # a plain scalar value is not legal
 123

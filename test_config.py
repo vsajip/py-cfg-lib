@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# Copyright 2019-2020 by Vinay Sajip. All Rights Reserved.
+# Copyright 2019-2021 by Vinay Sajip. All Rights Reserved.
 #
 from __future__ import print_function, division, absolute_import, unicode_literals
 
@@ -369,6 +369,7 @@ class TokenizerTestCase(BaseTestCase):
             'C18': '\r\n',
             'C19': '!x',
             'C20': '!!x',
+            'C21': "' '",
         }
         expected = {
             'C01': [],
@@ -440,6 +441,9 @@ class TokenizerTestCase(BaseTestCase):
                 (NOT, None),
                 (WORD, 'x')
             ],
+            'C21': [
+                (STRING, ' '),
+            ]
         }
 
         # build up the cases
@@ -1139,6 +1143,18 @@ class ParserTestCase(BaseTestCase):
             },
             'C29': {'empty_dict': {}},
             'C30': {'empty_list': ListBody()},
+            'C31': {
+                'stuff_with_spaces': {
+                    'classes': S('date'),
+                    'kind': S('field'),
+                    'label': S('A date field'),
+                    'label_i18n': S(' '),
+                    'name': S('foo2'),
+                    'ph_i18n': S(' '),
+                    'placeholder': S('Enter a date'),
+                    'type': S('input'),
+                }
+            },
         }
         for k, v in sorted(data.items()):
             if k < 'D01':
@@ -1510,14 +1526,14 @@ class ConfigTestCase(BaseTestCase):
                 'label': 'Postal address', 'label_i18n': 'postal-address',
                 'short_name': 'address',
                 'placeholder': 'We need this for delivering to you',
-                'ph_i18n': 'your-postal-address', 'message': '', 'required': True,
+                'ph_i18n': 'your-postal-address', 'message': ' ', 'required': True,
                 'attrs': {'minlength': 10}, 'grpclass': 'col-md-6'}),
             ('refs.delivery_instructions_field', {
                 'kind': 'field', 'type': 'textarea',
                 'name': 'delivery_instructions',
                 'label': 'Delivery Instructions', 'short_name': 'notes',
                 'placeholder': 'Any special delivery instructions?',
-                'message': '', 'label_i18n': 'delivery-instructions',
+                'message': ' ', 'label_i18n': 'delivery-instructions',
                 'ph_i18n': 'any-special-delivery-instructions',
                 'grpclass': 'col-md-6'}),
             ('refs.verify_field', {
@@ -1529,10 +1545,10 @@ class ConfigTestCase(BaseTestCase):
                 'attrs': {'minlength': 6, 'maxlength': 6, 'autofocus': True},
                 'append': {'label': 'Verify', 'type': 'submit',
                            'classes': 'btn-primary'},
-                'message': '', 'required': True}),
+                'message': ' ', 'required': True}),
             ('refs.signup_password_field', {
                 'kind': 'field', 'type': 'password', 'label': 'Password',
-                'label_i18n': 'password', 'message': '', 'name': 'password',
+                'label_i18n': 'password', 'message': ' ', 'name': 'password',
                 'ph_i18n': 'password-wanted-on-site',
                 'placeholder': 'The password you want to use on this site',
                 'required': True, 'toggle': True}),
@@ -1542,13 +1558,13 @@ class ConfigTestCase(BaseTestCase):
                 'label_i18n': 'password-confirmation',
                 'placeholder': 'The same password, again, ' +
                                'to guard against mistyping',
-                'ph_i18n': 'same-password-again', 'message': '',
+                'ph_i18n': 'same-password-again', 'message': ' ',
                 'toggle': True, 'required': True}),
             ('fieldsets.signup_ident[0].contents[0]', {
                 'kind': 'field', 'type': 'input', 'name': 'display_name',
                 'label': 'Your name', 'label_i18n': 'your-name',
                 'placeholder': 'Your full name', 'ph_i18n': 'your-full-name',
-                'message': '', 'data_source': 'user.display_name',
+                'message': ' ', 'data_source': 'user.display_name',
                 'required': True, 'attrs': {'autofocus': True},
                 'grpclass': 'col-md-6'}),
             ('fieldsets.signup_ident[0].contents[1]', {
@@ -1556,14 +1572,14 @@ class ConfigTestCase(BaseTestCase):
                 'label': 'Familiar name', 'label_i18n': 'familiar-name',
                 'placeholder': 'If not just the first word in your full name',
                 'ph_i18n': 'if-not-first-word',
-                'data_source': 'user.familiar_name', 'message': '',
+                'data_source': 'user.familiar_name', 'message': ' ',
                 'grpclass': 'col-md-6'}),
             ('fieldsets.signup_ident[1].contents[0]', {
                 'kind': 'field', 'type': 'email', 'name': 'email',
                 'label': 'Email address (used to sign in)',
                 'label_i18n': 'email-address', 'short_name': 'email address',
                 'placeholder': 'Your email address',
-                'ph_i18n': 'your-email-address', 'message': '',
+                'ph_i18n': 'your-email-address', 'message': ' ',
                 'required': True, 'data_source': 'user.email',
                 'grpclass': 'col-md-6'}),
             ('fieldsets.signup_ident[1].contents[1]', {
@@ -1571,7 +1587,7 @@ class ConfigTestCase(BaseTestCase):
                 'label': 'Phone number', 'label_i18n': 'phone-number',
                 'short_name': 'phone number', 'placeholder': 'Your phone number',
                 'ph_i18n': 'your-phone-number', 'classes': 'numeric',
-                'message': '', 'prepend': {'icon': 'phone'},
+                'message': ' ', 'prepend': {'icon': 'phone'},
                 'attrs': {'maxlength': 10},
                 'required': True, 'data_source': 'customer.mobile_phone',
                 'grpclass': 'col-md-6'}),
@@ -1580,7 +1596,8 @@ class ConfigTestCase(BaseTestCase):
             d = config.get(k)
             # if d != v:
                 # print(d)
-            self.assertEqual(d, v)
+            msg = 'Failed for %s' % k
+            self.assertEqual(d, v, msg)
 
     def test_example(self):
         p = os.path.join('test', 'derived', 'example.cfg')
