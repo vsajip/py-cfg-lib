@@ -1,5 +1,5 @@
 #
-# Copyright 2019-2020 by Vinay Sajip. All Rights Reserved.
+# Copyright 2019-2021 by Vinay Sajip. All Rights Reserved.
 #
 try:
     from collections.abc import Mapping
@@ -59,7 +59,7 @@ class ConfigError(ValueError):
     pass
 
 
-# This is a marker used in get(key, defaultValue) to catch rather than KeyError
+# This is a marker used in get(key, default_value) to catch rather than KeyError
 class KeyNotFoundError(ConfigError):
     pass
 
@@ -139,6 +139,21 @@ def _unwrap(o):
         result = o
     return result
 
+
+def _string_for(o):
+    if isinstance(o, list):
+        items = []
+        for item in o:
+            items.append(_string_for(item))
+        return '[%s]' % ', '.join(items)
+    elif isinstance(o, dict):
+        items = []
+        for k, v in o.items():
+            items.append('%s: %s' % (k, _string_for(v)))
+        return '{%s}' % ', '.join(items)
+    else:
+        result = str(o)
+    return result
 
 # noinspection PyUnboundLocalVariable
 _SYSTEM_TYPES = (basestring, bool, int, float, datetime.datetime, datetime.date)
@@ -277,7 +292,7 @@ _DOTTED_WORDS = r'[A-Za-z_]\w*(\.[A-Za-z_]\w*)*'
 _COLON_OBJECT_PATTERN = re.compile('%s:(%s)?$' % (_DOTTED_WORDS, _DOTTED_WORDS))
 _DOTTED_OBJECT_PATTERN = re.compile('%s$' % _DOTTED_WORDS)
 _ENV_VALUE_PATTERN = re.compile(r'\$(\w+)(\|(.*))?$')
-
+_INTERPOLATION_PATTERN = re.compile(r'\$\{([^}]+)\}')
 
 class Evaluator(object):
     """
@@ -600,7 +615,7 @@ def _resolve_colon_object(s):
     return result
 
 
-def _default_convert_string(s):
+def _default_convert_string(s, config):
     result = s
     m = _ISO_DATETIME_PATTERN.match(s)
     if m:
@@ -643,12 +658,38 @@ def _default_convert_string(s):
                     m = _DOTTED_OBJECT_PATTERN.match(s)
                     if m:
                         result = _resolve_dotted_object(s)
+                    else:
+                        m = _INTERPOLATION_PATTERN.search(s)
+                        if m:
+                            parts = []
+                            cp = 0
+                            failed = False
+                            for m in _INTERPOLATION_PATTERN.finditer(s):
+                                sp, ep = m.span()
+                                if sp > cp:
+                                    parts.append(s[cp:sp])
+                                path = m.groups()[0]
+                                try:
+                                    v = config[path]
+
+                                    parts.append(_string_for(v))
+                                    cp = ep
+                                except Exception as e:
+                                    failed = True
+                                    break
+                            if not failed:
+                                if cp < len(s):
+                                    parts.append(s[cp:])
+                                result = ''.join(parts)
             except ImportError:
                 pass
     return result
 
 
 class Config(object):
+
+    _string_converter = staticmethod(_default_convert_string)
+
     def __init__(self, stream_or_path, **kwargs):
         self.context = kwargs.get('context', {})
         self.include_path = kwargs.get('include_path', [])
@@ -660,7 +701,6 @@ class Config(object):
         self._can_close = False
         self._parent = self._data = self._stream = None
         self._cache = {} if cache else None
-        self._string_converter = _default_convert_string
         self._evaluator = Evaluator(self)
         if stream_or_path:
             if isinstance(stream_or_path, basestring):
@@ -693,7 +733,7 @@ class Config(object):
         return evaluator._get_from_path(path)
 
     def convert_string(self, s):
-        result = self._string_converter(s)
+        result = self._string_converter(s, self)
         if result is s and self.strict_conversions:
             raise ConfigError('Unable to convert string \'%s\'' % s)
         return result
@@ -782,6 +822,6 @@ class Config(object):
     def __getattr__(self, key):
         import warnings
 
-        msg = 'Attribute access is deprecated; use indexed access instead.'
+        msg = 'Attribute access is deprecated (%s); use indexed access instead.' % key
         warnings.warn(msg, DeprecationWarning, stacklevel=2)
         return self._data[key]

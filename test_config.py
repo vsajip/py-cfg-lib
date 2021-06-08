@@ -1504,7 +1504,7 @@ class ConfigTestCase(BaseTestCase):
             self.assertEqual(config.convert_string(case), case)
 
     def test_custom_conversion(self):
-        def custom_converter(s):
+        def custom_converter(s, config):
             return (s, s)
 
         config = Config(None)
@@ -1736,16 +1736,13 @@ class ConfigTestCase(BaseTestCase):
         self.assertEqual(config["computed9"], 160)
         self.assertEqual(config["computed10"], 62)
 
-        with self.assertRaises(ConfigError) as e:
-            config["bad_include"]
-        self.assertIn('@ operand must be a string', str(e.exception))
-        with self.assertRaises(ConfigError) as e:
-            config["computed7"]
-        self.assertIn('not found in configuration', str(e.exception))
         cases = (
+            ('bad_include', '@ operand must be a string'),
+            ('computed7', 'not found in configuration'),
             ('dict[4]', 'string required, but found 4'),
             ('dict[4:]', 'slices can only operate on lists'),
-            ('list[\'foo\']', 'integer or slice required, but found \'foo\'')
+            ('list[\'foo\']', 'integer or slice required, but found \'foo\''),
+            ('bad_interp', 'Unable to convert string '),
         )
         for s, m in cases:
             with self.assertRaises(ConfigError) as ec:
@@ -1808,7 +1805,14 @@ class ConfigTestCase(BaseTestCase):
         # replace backslashes for Windows - avoids having to escape them
         s = 'test: @"%s"' % p.replace('\\', '/')
         cfg = Config(io.StringIO(s))
-        self.assertEqual(2, cfg["test.computed6"])
+        self.assertEqual(2, cfg['test.computed6'])
+
+    def test_interpolation(self):
+        p = os.path.join('test', 'derived', 'test.cfg')
+        config = self.load(p)
+        self.assertEqual(config['interp'], "A-4 a test_foo True 10 1e-07 1 b "
+                                           "[a, c, e, g]Z")
+        self.assertEqual(config['interp2'], '{a: b}')
 
     def test_nested_include_path(self):
         p = os.path.join('test', 'base', 'top.cfg')
@@ -2071,7 +2075,7 @@ class CompatibilityTestCase(BaseTestCase):
             self.assertEqual(15, self.cfg.derived12)
         self.assertEqual(len(w), 1)
         self.assertIs(w[0].category, DeprecationWarning)
-        self.assertIn('Attribute access is deprecated; '
+        self.assertIn('Attribute access is deprecated (derived12); '
                       'use indexed access instead.', str(w[0].message))
 
     def test_multiline(self):

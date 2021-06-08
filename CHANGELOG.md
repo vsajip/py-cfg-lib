@@ -4,6 +4,9 @@ All notable changes for the new implementation should be documented in this file
 
 ## [Unreleased]
 ### Changed
+* [`ebe331b`](https://github.com/vsajip/py-cfg-lib/commit/ebe331b)
+  Fix unreported bug in Tokenizer.push_back().
+
 * [`5239a47`](https://github.com/vsajip/py-cfg-lib/commit/5239a47)
   Fix GH-2: ensure root and include path are preserved in included configuratons.
 
