@@ -1604,7 +1604,8 @@ class ConfigTestCase(BaseTestCase):
         self.assertEqual(strings[3], '''with "either"\nkind of 'quote' embedded within''')
         # special strings
         self.assertIs(config['special_value_1'], sys.stderr)
-        self.assertEqual(config['special_value_2'], os.path.expanduser('~'))
+        if os.name != 'nt':
+            self.assertEqual(config['special_value_2'], os.path.expanduser('~'))
         tzinfo = timezone(datetime.timedelta(hours=5, minutes=30))
         dtv = datetime.datetime(2019,3,28,23,27,4, 314159, tzinfo=tzinfo)
         self.assertEqual(config['special_value_3'], dtv)
