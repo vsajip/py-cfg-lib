@@ -1,3 +1,5 @@
+![AppVeyor](https://img.shields.io/appveyor/build/vsajip/py-cfg-lib)
+
 The CFG configuration format is a text format for configuration files which is similar to, and a superset of, the JSON format. It dates from [2008](https://wiki.python.org/moin/HierConfig) and has the following aims:
 
 * Allow a hierarchical configuration scheme with support for key-value mappings and lists.
