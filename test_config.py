@@ -1790,6 +1790,11 @@ class ConfigTestCase(BaseTestCase):
         cfg = Config(io.StringIO(s))
         self.assertEqual(2, cfg["test.computed6"])
 
+    def test_nested_include_path(self):
+        p = os.path.join('test', 'base', 'top.cfg')
+        ip = [os.path.join('test', 'derived'), os.path.join('test', 'another')]
+        config = self.load(p, include_path=ip)
+        self.assertEqual(config['level1.level2.final'], 42)
 
 #
 # Compatibility tests with older code base

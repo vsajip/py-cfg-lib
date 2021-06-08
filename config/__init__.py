@@ -48,7 +48,7 @@ else:
 
     basestring = str
 
-__version__ = '0.5.0.post0'
+__version__ = '0.5.1.dev0'
 
 
 class ConfigFormatError(ParserError):
@@ -359,11 +359,13 @@ class Evaluator(object):
         if not found:
             raise ConfigError('Unable to locate %s' % fn)
         with open_file(p) as f:
+            rootdir = os.path.dirname(p)
             p = Parser(f)
             result = p.container()
             if isinstance(result, MappingBody):
                 cfg = Config(
-                    None, context=config.context, cache=self.config._cache is not None
+                    None, context=config.context, cache=config._cache is not None,
+                    include_path=config.include_path, rootdir=rootdir
                 )
                 cfg._parent = config
                 cfg._data = cfg._wrap_mapping(result)
