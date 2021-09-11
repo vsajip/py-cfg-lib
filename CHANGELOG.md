@@ -2,7 +2,8 @@
 
 All notable changes for the new implementation should be documented in this file.
 
-## [Unreleased]
+## 0.5.1 - 2021-09-11
+
 ### Added
 * [`4bafb02`](https://github.com/vsajip/py-cfg-lib/commit/4bafb02)
   Add interpolation functionality.
@@ -21,5 +22,5 @@ All notable changes for the new implementation should be documented in this file
 
 ## 0.5.0 - 2020-03-27
 ### Added
-- ['6c3f8dc'](https://github.com/vsajip/py-cfg-lib/commit/6c3f8dc)
+- [`6c3f8dc`](https://github.com/vsajip/py-cfg-lib/commit/6c3f8dc)
   Release new implementation.
