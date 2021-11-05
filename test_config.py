@@ -1826,7 +1826,7 @@ class ConfigTestCase(BaseTestCase):
         config = self.load(p)
         with self.assertRaises(ConfigError) as ec:
             config['recurse']
-        self.assertEquals("Configuration cannot include itself: recurse.cfg", str(ec.exception))
+        self.assertEqual("Configuration cannot include itself: recurse.cfg", str(ec.exception))
 #
 # Compatibility tests with older code base
 #

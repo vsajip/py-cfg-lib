@@ -168,6 +168,14 @@ def _merge_dicts(target, source):
         else:
             target[k] = source[k]
 
+#
+# This is only needed because os.path.samefile isn't available for Windows on 2.x
+#
+def _same_file(p1, p2):
+    if sys.version_info[0] > 2 or os.name != 'nt':
+        return os.path.samefile(p1, p2)
+    return os.path.realpath(p1).lower() == os.path.realpath(p2).lower()
+
 # use negative lookahead to disallow anything starting with a digit.
 _IDENTIFIER_PATTERN = re.compile(r'^(?!\d)(\w+)$', re.U)
 
@@ -372,7 +380,7 @@ class Evaluator(object):
                         break
         if not found:
             raise ConfigError('Unable to locate %s' % fn)
-        if config.path and os.path.samefile(config.path, p):
+        if config.path and _same_file(config.path, p):
             raise ConfigError('Configuration cannot include itself: '
                               '%s' % os.path.basename(p))
         with open_file(p) as f:
