@@ -185,17 +185,18 @@ class FragmentTestCase(BaseTestCase):
             # if ast != expected:
                 # import pdb; pdb.set_trace()
             self.assertEqual(ast, expected)
-        for i in range(10):
-            op1 = random.choice(ops)
-            op2 = random.choice(ops)
-            text = 'foo %s bar %s baz' % (op1, op2)
-            ast = parser.parse(text, rule)
-            op1 = aliases.get(op1, op1)
-            op2 = aliases.get(op2, op2)
-            expected = {'op': op2, 'lhs': {'op': op1, 'lhs': W('foo'), 'rhs': W('bar')}, 'rhs': W('baz')}
-            # if ast != expected:
-                # import pdb; pdb.set_trace()
-            self.assertEqual(ast, expected)
+        if rule != 'comparison':
+            for i in range(10):
+                op1 = random.choice(ops)
+                op2 = random.choice(ops)
+                text = 'foo %s bar %s baz' % (op1, op2)
+                ast = parser.parse(text, rule)
+                op1 = aliases.get(op1, op1)
+                op2 = aliases.get(op2, op2)
+                expected = {'op': op2, 'lhs': {'op': op1, 'lhs': W('foo'), 'rhs': W('bar')}, 'rhs': W('baz')}
+                # if ast != expected:
+                    # import pdb; pdb.set_trace()
+                self.assertEqual(ast, expected)
 
     def test_term(self):
         parser = self.parser
@@ -1820,6 +1821,12 @@ class ConfigTestCase(BaseTestCase):
         config = self.load(p, include_path=ip)
         self.assertEqual(config['level1.level2.final'], 42)
 
+    def test_recursive_configuration(self):
+        p = os.path.join('test', 'derived', 'recurse.cfg')
+        config = self.load(p)
+        with self.assertRaises(ConfigError) as ec:
+            config['recurse']
+        self.assertEquals("Configuration cannot include itself: recurse.cfg", str(ec.exception))
 #
 # Compatibility tests with older code base
 #

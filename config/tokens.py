@@ -699,7 +699,7 @@ BITNOT = TILDE
 
 WORDCHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_"
 KEYWORDS = {TRUE, FALSE, NONE, IS, IN, NOT, AND, OR}
-PUNCT = ':-+*/%,.{}[]()@$<>!~&|^'
+PUNCT = ':-+*/%,.{}[]()@$<>!~&|^='
 
 PYKEYWORDS = {PYTRUE: TRUE, PYFALSE: FALSE, PYNONE: NONE}
 
@@ -1124,16 +1124,6 @@ class Tokenizer(object):
             elif c in digits:
                 tt, token, value, endline, endcol = get_number(c)
                 break
-            elif c == '=':
-                nc = get_char()
-                if nc == '=':
-                    token = c + nc
-                    endline, endcol = self.charline, self.charcol
-                    tt = token
-                else:
-                    tt = token = c
-                    self.push_back(nc)
-                break
             elif c in self.punct:
                 token = tt = c
                 endline, endcol = self.charline, self.charcol
@@ -1146,6 +1136,15 @@ class Tokenizer(object):
                             token += c
                             tt, token, value, endline, endcol = get_number(token)
                             break
+                elif c == '=':
+                    nc = get_char()
+                    if nc == '=':
+                        token = c + nc
+                        tt = token
+                        endline, endcol = self.charline, self.charcol
+                    else:
+                        tt = token = c
+                        self.push_back(nc)
                 elif c == '-':
                     c = get_char()
                     if c:

@@ -48,7 +48,7 @@ else:
 
     basestring = str
 
-__version__ = '0.5.1'
+__version__ = '0.5.2.dev0'
 
 
 class ConfigFormatError(ParserError):
@@ -167,7 +167,6 @@ def _merge_dicts(target, source):
             _merge_dicts(target[k], v)
         else:
             target[k] = source[k]
-
 
 # use negative lookahead to disallow anything starting with a digit.
 _IDENTIFIER_PATTERN = re.compile(r'^(?!\d)(\w+)$', re.U)
@@ -373,6 +372,9 @@ class Evaluator(object):
                         break
         if not found:
             raise ConfigError('Unable to locate %s' % fn)
+        if config.path and os.path.samefile(config.path, p):
+            raise ConfigError('Configuration cannot include itself: '
+                              '%s' % os.path.basename(p))
         with open_file(p) as f:
             rootdir = os.path.dirname(p)
             p = Parser(f)

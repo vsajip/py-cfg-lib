@@ -470,7 +470,7 @@ class Parser(object):
 
     def comparison(self):
         result = self.bitor_expr()
-        while self.token.kind in (LE, LT, GE, GT, EQ, NEQ, ALT_NEQ, IS, IN, NOT):
+        if self.token.kind in (LE, LT, GE, GT, EQ, NEQ, ALT_NEQ, IS, IN, NOT):
             op = self.comp_op()
             rhs = self.bitor_expr()
             result = make_binary_expr(op, result, rhs)
