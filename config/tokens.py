@@ -1066,8 +1066,7 @@ class Tokenizer(object):
                     c2 = get_char()
                     if c2 != quote:
                         self.push_back(c2)
-                        if not c2:
-                            self.charline, self.charcol = c1loc
+                        self.charline, self.charcol = c1loc
                         self.push_back(c1)
                     else:
                         multiline = True
