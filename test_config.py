@@ -1801,12 +1801,14 @@ class ConfigTestCase(BaseTestCase):
         parser = self.parser
         self.assertRaises(ValueError, parser.parse, 'foo', rule='bar')
 
-    def test_absolute_include_path(self):
-        p = os.path.abspath(os.path.join('test', 'derived', 'test.cfg'))
-        # replace backslashes for Windows - avoids having to escape them
-        s = 'test: @"%s"' % p.replace('\\', '/')
-        cfg = Config(io.StringIO(s))
-        self.assertEqual(2, cfg['test.computed6'])
+    def test_include_paths(self):
+        # Test with relative and abdolute paths
+        p = os.path.join('test', 'derived', 'test.cfg')
+        for fn in (p, os.path.abspath(p)):
+            # replace backslashes for Windows - avoids having to escape them
+            s = 'test: @"%s"' % fn.replace('\\', '/')
+            cfg = Config(io.StringIO(s))
+            self.assertEqual(2, cfg['test.computed6'])
 
     def test_interpolation(self):
         p = os.path.join('test', 'derived', 'test.cfg')

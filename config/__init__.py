@@ -207,7 +207,11 @@ class DictWrapper(object):
                 raise KeyNotFoundError('not found in configuration: %s' % key)
         else:
             path = _parse_path(key)
-            result = config._get_from_path(path)
+            # result = config._get_from_path(path)
+            evaluator = config._evaluator
+            evaluator.refs_seen.clear()
+            result = evaluator._get_from_path(path)
+
         # data[key] = result
         return result
 
@@ -395,6 +399,8 @@ class Evaluator(object):
                 cfg._parent = config
                 cfg._data = cfg._wrap_mapping(result)
                 result = cfg
+            elif not isinstance(result, ListBody):
+                raise ConfigError('Unexpected container type: %s' % result)
         return result
 
     def _get_from_path(self, path):
@@ -707,7 +713,6 @@ class Config(object):
         self.strict_conversions = kwargs.get('strict_conversions', True)
         cache = kwargs.get('cache', False)
         self.path = kwargs.get('path')
-        self.rootdir = kwargs.get('rootdir')
         self._can_close = False
         self._parent = self._data = self._stream = None
         self._cache = {} if cache else None
@@ -717,6 +722,10 @@ class Config(object):
                 self.load_file(stream_or_path, kwargs.get('encoding'))
             else:
                 self.load(stream_or_path)
+
+    @property
+    def rootdir(self):
+        return os.getcwd() if self.path is None else os.path.dirname(os.path.abspath(self.path))
 
     def _wrap_mapping(self, items):
         data = ODict()
@@ -736,11 +745,10 @@ class Config(object):
             data[key] = v
         return result
 
-    def _get_from_path(self, path):
-        # convenience method
-        evaluator = self._evaluator
-        evaluator.refs_seen.clear()
-        return evaluator._get_from_path(path)
+    # def _get_from_path(self, path):
+        # evaluator = self._evaluator
+        # evaluator.refs_seen.clear()
+        # return evaluator._get_from_path(path)
 
     def convert_string(self, s):
         result = self._string_converter(s, self)
@@ -801,13 +809,7 @@ class Config(object):
         self._stream = stream
         path = self.path
         if path is None:
-            path = getattr(stream, 'name', None)
-            if path is None:
-                rootdir = os.getcwd()
-            else:
-                rootdir = os.path.dirname(os.path.abspath(path))
-            self.rootdir = rootdir
-            self.path = path
+            self.path = getattr(stream, 'name', None)
         try:
             p = Parser(stream)
             items = p.container()
