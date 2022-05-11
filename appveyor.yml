@@ -1,6 +1,6 @@
 version: 1.0.{build}
 image:
-  - Visual Studio 2017
+  - Visual Studio 2019
   - ubuntu1804
   - macos
   - macos-mojave
@@ -13,6 +13,7 @@ environment:
   - TOXENV: py37
   - TOXENV: py38
   - TOXENV: py39
+  - TOXENV: py310
 
 install:
 - cmd: pip install tox
