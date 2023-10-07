@@ -3,8 +3,25 @@ name: Package tests
 on:
   push:
     branches: [ master ]
+    paths-ignore:
+      - 'LICENSE'
+      - 'MANIFEST.in'
+      - 'README.*'
+      - 'CHANGELOG.*'
+      - '.github/ISSUE-TEMPLATE/**'
+      - '.gitignore'
+      - 'appveyor.yml'
+
   pull_request:
     branches: [ master ]
+    paths-ignore:
+      - 'LICENSE'
+      - 'MANIFEST.in'
+      - 'README.*'
+      - 'CHANGELOG.*'
+      - '.github/ISSUE-TEMPLATE/**'
+      - '.gitignore'
+      - 'appveyor.yml'
 
 jobs:
   build:
